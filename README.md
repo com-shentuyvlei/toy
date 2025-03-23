@@ -1,11 +1,12 @@
 # Toy Project Demo
 
 ## 目录
-- [简介](#简介)
-- [安装](#安装)
-- [使用方法](#使用方法)
+- [Toy Project Demo](#toy-project-demo)
+  - [目录](#目录)
+  - [简介](#简介)
+  - [安装](#安装)
+    - [安装 playwright](#安装-playwright)
 - [贡献](#贡献)
-- [许可证](#许可证)
 
 ## 简介
 这是一个玩具项目演示（Toy Project Demo），旨在展示和测试某些功能或概念。该项目目前包含以下内容：
@@ -32,6 +33,13 @@ cd toy
 # 安装依赖
 pip install -r requirements.txt
 
+```
+
+### 安装 playwright
+
+```
+playwright install
+```
 
 # 贡献
 欢迎为本项目做出贡献！请遵循以下步骤：
