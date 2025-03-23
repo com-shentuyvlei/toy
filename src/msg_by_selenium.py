@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import time
+import random
+import subprocess
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -9,7 +11,18 @@ from selenium.webdriver.chrome.options import Options
 
 chrom_data_path = '/Users/gs/michael/app/chrome/user_data';
 chrom_driver_path = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-driver = webdriver.Chrome()
+
+chrome_cmd = [
+    chrom_driver_path,
+    "--remote-debugging-port=9222",
+    "--user-data-dir=/tmp/chrome_profile" + chrom_data_path,
+    "--no-first-run"
+]
+subprocess.Popen(chrome_cmd)
+options = Options()
+options.add_experimental_option("debuggerAddress", "127.0.0.1:9222")
+driver = webdriver.Chrome(options=options)
+
 driver.get("https://login.aliexpress.com/user/seller/login?bizSegment=CSP&return_url=http://csp.aliexpress.com/")
 username = "zhm1990123@163.com"
 password = "123.123.Meng"
@@ -34,20 +47,12 @@ def do_login():
     login_button.click()
 
 
-def do_session_login():
-    options = Options()
-    arg = "user-data-dir=" + chrom_data_path
-    options.add_argument(arg)  # 指定Chrome的用户数据目录
-    options.add_argument("--no-startup-window")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    service = Service(chrom_driver_path)
-    driver = webdriver.Chrome(service=service, options=options)
-
 
 def get_best_sell_product():
     driver.find_element(By.NAME,"生意参谋").click()
-    driver.find_element(By.NAME,"商品排行").click()
+    time.sleep(random.randint(1, 5))
+    driver.find_element(By.XPATH, "//a[@title='商品排行']").click()
+
     # 支付榜、访客榜、收藏榜、加购榜
     # Top 10
     paid_goods_ids = get_goods_id("支付榜")
@@ -61,21 +66,25 @@ def get_best_sell_product():
 
 
 def get_goods_id(type):
-    driver.find_element(By.NAME,type).click()
+    group_types = driver.find_elements(By.CLASS_NAME,"ait-quick-filter-item-text")
+    for group_type in group_types:
+        if group_type.text == type:
+            group_type.click()
+            break
     time.sleep(5)
-    goods_id_span_list =  driver.find_elements(By.CLASS_NAME,"ait-typography ait-typography-ellipsis ait-typography-single-line ait-product-ellipsis ait-product-subText")
+    goods_id_span_list =  driver.find_elements(By.CSS_SELECTOR,".ait-typography.ait-typography-ellipsis.ait-typography-single-line.ait-product-ellipsis.ait-product-subText")
     ids = []
     for i in range(10):
         ## ID: 1005008123805928/1005008683792606
-        id = ''.join(filter(str.isdigit, goods_id_span_list[i]))
+        id = ''.join(filter(str.isdigit, goods_id_span_list[i].text))
         ids.append(id) 
     return ids
 
 
 def do_marketing(ids):
     driver.find_element(By.NAME,"营销").click()
-    driver.find_element(By.NAME,"客户营销").click()
-    driver.find_element(By.NAME,"新建自定义营销计划").click()
+    driver.find_element(By.XPATH, "//a[@title='客户营销']").click()
+    driver.find_element(By.CSS_SELECTOR,".next-btn.next-medium.next-btn-secondary").click()
     driver.find_element(By.NAME,"选择店铺Code").click()
     driver.find_element(By.NAME,"全选").click()
     driver.find_element(By.NAME,"确定").click()
@@ -89,17 +98,17 @@ def do_marketing(ids):
                 input.send_keys(id)
                 driver.find_element(By.CLASS_NAME,"next-checkbox-input").click()
     
-    driver.find_elements(By.CLASS_NAME,"next-btn next-medium next-btn-primary").click()
+    driver.find_elements(By.CSS_SELECTOR,".next-btn.next-medium.next-btn-primary").click()
     driver.find_element(By.CLASS_NAME,"next-btn-helper").click()
     
 
 def main():
-    ## do_login()
-    do_session_login()
+    do_login()
+    time.sleep(random.randint(20, 30))
     best_sells = get_best_sell_product()
     for item in best_sells[:4]:
         do_marketing(item)
-
+        time.sleep(2 + random.random() * 5)
 
 
 if __name__ == "__main__":
