@@ -51,7 +51,7 @@ def do_login():
 def get_best_sell_product():
     driver.find_element(By.NAME,"生意参谋").click()
     time.sleep(random.randint(1, 5))
-    driver.find_element(By.XPATH, "//a[@title='商品排行']").click()
+    driver.find_element(By.NAME, "商品排行").click()
 
     # 支付榜、访客榜、收藏榜、加购榜
     # Top 10
@@ -83,24 +83,73 @@ def get_goods_id(type):
 
 def do_marketing(ids):
     driver.find_element(By.NAME,"营销").click()
-    driver.find_element(By.XPATH, "//a[@title='客户营销']").click()
+    time.sleep(random.randint(3, 5))
+    driver.find_element(By.NAME, "客户营销").click()
+    time.sleep(random.randint(3, 5))
+    print(driver.title) 
     driver.find_element(By.CSS_SELECTOR,".next-btn.next-medium.next-btn-secondary").click()
-    driver.find_element(By.NAME,"选择店铺Code").click()
-    driver.find_element(By.NAME,"全选").click()
-    driver.find_element(By.NAME,"确定").click()
+    time.sleep(random.randint(3, 5))
+    windows = driver.window_handles
+    driver.switch_to.window(windows[-1])  # 切换到新窗口
+    time.sleep(random.randint(3, 5))
+    print(driver.title) 
+    shop_choice_btns = driver.find_elements(By.CLASS_NAME,"next-btn-helper")
+    for btn in shop_choice_btns:
+        if btn.text == "选择店铺Code":
+            btn.click()
+            break
+    time.sleep(random.randint(3, 5))
+    check_boxs = driver.find_elements(By.CLASS_NAME,"next-checkbox-input")
+    for check_box in check_boxs:
+        if check_box.get_attribute("aria-label") == "全选":
+            check_box.click()
+    time.sleep(random.randint(3, 5))
+    shop_choice_config_btns = driver.find_elements(By.CLASS_NAME,"next-btn-helper")
+    for btn in shop_choice_config_btns:
+        if btn.text == "确认":
+            btn.click()
+            break
+    time.sleep(random.randint(3, 5))
 
-    driver.find_element(By.NAME,"选择商品").click()
+    shop_product_btns = driver.find_elements(By.CLASS_NAME,"next-btn-helper")
+    for btn in shop_product_btns:
+        if btn.text == "选择商品":
+            btn.click()
+            break
+    time.sleep(random.randint(3, 5))
     product_dialog = driver.find_element(By.CLASS_NAME,"crm-product-dialog-ctrl")
+    time.sleep(random.randint(3, 5))
     inputs = product_dialog.find_elements(By.TAG_NAME,"input")
+    time.sleep(random.randint(3, 5))
     for input in inputs:
         if input.get_attribute("placeholder") == "请输入商品ID":
             for id in ids:
                 input.send_keys(id)
-                driver.find_element(By.CLASS_NAME,"next-checkbox-input").click()
-    
-    driver.find_elements(By.CSS_SELECTOR,".next-btn.next-medium.next-btn-primary").click()
-    driver.find_element(By.CLASS_NAME,"next-btn-helper").click()
-    
+                time.sleep(random.randint(3, 5))
+                query_btns = product_dialog.find_elements(By.CSS_SELECTOR,".next-icon.next-icon-search.next-xs")
+                query_btn = query_btns[0]
+                query_btn.click()
+                first_tr = product_dialog.find_element(By.CSS_SELECTOR,".next-table-row.first")
+                check_box = first_tr.find_element(By.CLASS_NAME,"next-checkbox-input")
+                check_box.click()
+                input.send_keys("")
+
+
+    time.sleep(random.randint(3, 5))
+    goods_choice_config_btns = driver.find_elements(By.CLASS_NAME,"next-btn-helper")
+    for btn in goods_choice_config_btns:
+        if btn.text == "确认":
+            btn.click()
+            break
+    time.sleep(random.randint(3, 5))
+    config_btns = driver.find_elements(By.CLASS_NAME,"next-btn-helper")
+    for btn in config_btns:
+        if btn.text == "一键创建":
+            btn.click()
+            break
+    driver.close()
+    driver.switch_to.window(driver.window_handles[0])
+
 
 def main():
     do_login()
