@@ -6,8 +6,8 @@ import random
 import subprocess
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.keys import Keys
 
 chrom_data_path = '/Users/gs/michael/app/chrome/user_data';
 chrom_driver_path = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
@@ -87,7 +87,11 @@ def do_marketing(ids):
     driver.find_element(By.NAME, "客户营销").click()
     time.sleep(random.randint(3, 5))
     print(driver.title) 
-    driver.find_element(By.CSS_SELECTOR,".next-btn.next-medium.next-btn-secondary").click()
+    btns = driver.find_elements(By.CLASS_NAME,"next-btn-helper")
+    for new_biz_plan_btn in btns:
+        if new_biz_plan_btn.text == "新建自定义营销计划":
+            new_biz_plan_btn.click()
+            break
     time.sleep(random.randint(3, 5))
     windows = driver.window_handles
     driver.switch_to.window(windows[-1])  # 切换到新窗口
@@ -117,23 +121,35 @@ def do_marketing(ids):
             btn.click()
             break
     time.sleep(random.randint(3, 5))
-    product_dialog = driver.find_element(By.CLASS_NAME,"crm-product-dialog-ctrl")
+    product_dialog = driver.find_element(By.CLASS_NAME,"next-dialog-body")
     time.sleep(random.randint(3, 5))
+    dialog_header = product_dialog.find_element(By.CLASS_NAME,"crm-product-dialog-ctrl")
+    dialog_header = dialog_header.find_elements(By.CLASS_NAME,"next-icon")
     inputs = product_dialog.find_elements(By.TAG_NAME,"input")
     time.sleep(random.randint(3, 5))
-    for input in inputs:
-        if input.get_attribute("placeholder") == "请输入商品ID":
-            for id in ids:
-                input.send_keys(id)
-                time.sleep(random.randint(3, 5))
-                query_btns = product_dialog.find_elements(By.CSS_SELECTOR,".next-icon.next-icon-search.next-xs")
-                query_btn = query_btns[0]
-                query_btn.click()
-                first_tr = product_dialog.find_element(By.CSS_SELECTOR,".next-table-row.first")
-                check_box = first_tr.find_element(By.CLASS_NAME,"next-checkbox-input")
-                check_box.click()
-                input.send_keys("")
+    input = inputs[1]
+    for id in ids:
+        input.clear()
+        if input.get_attribute("value") != "":
+            driver.execute_script("arguments.value = '';", input)
+        if input.get_attribute("value") != "":
+            input.send_keys("")
+        if input.get_attribute("value") != "":
+            driver.execute_script("arguments.value = '';", input)
+            input_value = input.get_attribute("value")  # 获取当前内容
+            for _ in range(len(input_value)):
+                input.send_keys(Keys.BACKSPACE) 
 
+        input.send_keys(id)
+        time.sleep(random.randint(3, 5))
+        query_btns = product_dialog.find_elements(By.CSS_SELECTOR,".next-icon.next-icon-search.next-xs")
+        query_btn = query_btns[0]
+        query_btn.click()                
+        time.sleep(random.randint(3, 5))
+        check_box_container = product_dialog.find_element(By.CLASS_NAME,"next-table-cell-wrapper")
+        check_box = check_box_container.find_element(By.CLASS_NAME,"next-checkbox-input")
+        if check_box.tag_name == "input" and check_box.get_attribute("type") == "checkbox":
+            check_box.click()
 
     time.sleep(random.randint(3, 5))
     goods_choice_config_btns = driver.find_elements(By.CLASS_NAME,"next-btn-helper")
@@ -155,9 +171,12 @@ def main():
     do_login()
     time.sleep(random.randint(20, 30))
     best_sells = get_best_sell_product()
-    for item in best_sells[:4]:
+    flat_list = sum(best_sells, [])
+    for i in range(0, len(flat_list), 4):
+        item = flat_list[i:i+4]
+        print(item)
         do_marketing(item)
-        time.sleep(2 + random.random() * 5)
+        time.sleep(2 + random.random() * 5)    
 
 
 if __name__ == "__main__":
